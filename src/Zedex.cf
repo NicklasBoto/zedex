@@ -1,0 +1,62 @@
+layout toplevel ;
+
+Progr. Program ::= [Toplevel] ;
+terminator Toplevel ";" ;
+
+ToplF  . Toplevel ::= Id [Id] ":=" Expr ;
+ToplX  . Toplevel ::= "ξ" "(" Complex ")" [Id] ":=" Expr ;
+toplxs . Toplevel ::= "X" "(" Complex ")" [Id] ":=" Expr ;
+ToplZ  . Toplevel ::= "ζ" "(" Complex ")" [Id] ":=" Expr ;
+toplzs . Toplevel ::= "Z" "(" Complex ")" [Id] ":=" Expr ;
+
+define toplxs c x m = ToplX c x m ;
+define toplzs c x m = ToplZ c x m ;
+
+position token Id letter (letter | digit | '_' | '\'')* ;
+
+EVar   . Expr3 ::= Id ;
+ETup   . Expr3 ::= "(" Expr "," [Expr] ")" ;
+EUnit  . Expr3 ::= "(" ")" ;
+EApp   . Expr2 ::= Expr2 Expr3 ;
+edolr  . Expr1 ::= Expr2 "$" Expr1 ;
+EComp  . Expr1 ::= Expr2 "∘" Expr1 ;
+ecomps . Expr1 ::= Expr2 "@" Expr1 ;
+EHad   . Expr1 ::= "~" Expr1 ;
+EAbs   . Expr1 ::= "λ" [Id] "." Expr ;
+eabss  . Expr1 ::= "\\" [Id] "." Expr ;
+EXAbs  . Expr1 ::= "ξ" "(" Complex ")" [Id] "." Expr ;
+exabss . Expr1 ::= "X" "(" Complex ")" [Id] "." Expr ;
+EZAbs  . Expr1 ::= "ζ" "(" Complex ")" [Id] "." Expr ;
+ezabss . Expr1 ::= "Z" "(" Complex ")" [Id] "." Expr ;
+coercions Expr 3 ;
+separator nonempty Expr "," ;
+separator nonempty Id "" ;
+
+define edolr a b    = EApp a b ;
+define ecomps a b   = EComp a b ;
+define eabss x m    = EAbs x m ;
+define exabss c x m = EXAbs c x m ;
+define ezabss c x m = EZAbs c x m ;
+
+CComp . Complex2 ::= Scalar "+" Scalar "i" ;
+CComn . Complex2 ::= Scalar "-" Scalar "i" ;
+creal . Complex2 ::= Scalar ;
+cnmag . Complex2 ::= "-i" ;
+cjmag . Complex2 ::= "i" ;
+CPi   . Complex2 ::= "π" ;
+cpis  . Complex2 ::= "pi" ;
+CE    . Complex2 ::= "e" ;
+CExp  . Complex1 ::= Complex2 "^" Complex1 ;
+CDiv  . Complex1 ::= Complex2 "/" Complex1 ;
+CMul  . Complex1 ::= Complex2 Complex1 ;
+coercions Complex 2 ;
+
+define creal r = CComp r (Scalar "0") ;
+define cnmag   = CComp (Scalar "0") (Scalar "-1") ;
+define cjmag   = CComp (Scalar "0") (Scalar "1") ;
+define cpis    = CPi ;
+
+token Scalar '-'? digit+ ('.' digit+ ('E' '-'? digit+)?)? ;
+
+comment "--" ;
+comment "{-" "-}" ;

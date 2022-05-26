@@ -1,0 +1,97 @@
+Z(pi) PauliZ x
+ := x
+
+X(pi) PauliX x
+ := x
+
+X(0) Share x
+ := (x,x)
+
+{-
+Bool
+ ::= F 
+   | T
+
+Not : Bool -> Bool
+ := match @ X(Pi)
+  | F => T
+  | T => F
+
+Maybe<a>
+ ::= Nothing
+   | Just a
+
+typeclass Monad<m> implements
+  m     : Type -> Type
+  ret   : <a> a -> m a
+  _>>=_ : <a,b> m a -> (a -> m b) -> m b
+
+proof Monad of
+  -- The specific datatype to prove.
+  m ::= Maybe
+
+  -- Identity functor
+  ret := Just
+
+  -- Associative functor
+  (_>>=f) := match
+    | Nothing => Nothing
+    | Just x  => f x 
+
+  Nothing >>= _f = Nothing
+  Just x  >>=  f = f x
+
+f := do
+  x <- maybe_value
+  y <- monad_func x
+  f y
+-- -}
+
+
+
+
+
+
+
+
+
+
+
+    
+-- X(0) Share x := (x,x);
+-- Z(0) Share x := (x,x);
+-- 
+-- Had := X(Pi/2) @ Z(Pi/2) @ X(Pi/2);
+-- 
+-- -- (X(0) x . x*) X(Pi) === X(Pi)[x=>];
+-- 
+-- Bool ::= T | F;
+-- 
+-- Not : Bool -> X(Pi) Bool
+--   := X(Pi){
+--     T => F,
+--     F => T
+-- }
+-- 
+-- Result a ::= None | Ok a;
+-- 
+-- Return : a -> Result a
+--   := Ok;
+-- 
+-- Bind : (a -> Result b) -> Result a -> Result b
+--   f := of {
+--     None => None,
+--     Ok x => f x 
+-- }
+-- 
+-- Bind f : (a -> Result b) -> Result a -> Result b
+--   | None := None
+--   | Ok x := f x
+-- 
+-- feynman : FD Fermion
+--   := do
+--     e1:e2:_es <- electrons
+--     scatter e1 e2
+--     return (e1,e2)
+
+ 
