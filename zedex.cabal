@@ -24,7 +24,6 @@ source-repository head
 
 library
   exposed-modules:
-      Compile.Compiler
       Diagram.Graph
       Diagram.Template
       Frontend.Zedex.Abs
