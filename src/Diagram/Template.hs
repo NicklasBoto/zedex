@@ -1,11 +1,23 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Diagram.Template
-    ( -- genAbstractions
+    ( genAbstractions
     ) where
 
-import Control.Monad
+import Control.Monad ( replicateM, forM )
 import Language.Haskell.TH
+    ( mkName,
+      varP,
+      clause,
+      varE,
+      listE,
+      normalB,
+      funD,
+      Quote(newName),
+      Exp(LamE, AppE, VarE),
+      Q,
+      Pat(ListP, VarP),
+      Dec )
 
 delist :: Int -> Q Exp
 delist n = do
@@ -20,23 +32,12 @@ delist n = do
 mkAbs:: String -> Int -> Q Dec
 mkAbs basis n = do
     args  <- replicateM n (newName "n")
-    let bs = mkName basis
+    let bs = mkName (basis ++ show n)
         af = mkName "alpha"
         fn = mkName "f"
-        ex = [| $(varE bs) $(varE af) $(delist n) |]
-        ps = [p| $(varP af) $(varP af) |]
-    funD (mkName basis) [clause (varP (mkName "alpha") ) (normalB e) []]
-    undefined
-        
+        ex = [| $(varE (mkName basis)) $(varE af) $(delist n) $(listE (map varE args)) |]
+        ps = varP af :  varP fn : map varP args :: [Q Pat]
+    funD bs [ clause ps (normalB ex) [] ]
 
-
--- gen :: String -> Int -> Q [Dec]
--- gen basis n = [d| $(funD (mkName name)) alpha f = $(varE (mkName basis)) alpha $(delist n) |]
-
--- genAbstractions :: String -> Int -> Q [Dec]
--- genAbstractions basis n = forM [1..n] mkDelist
---   where mkDelist ith = do
---           dl <- delist ith
---           let name = mkName $ basis ++ show ith
---           -- return $ FunD name [Clause [] (NormalB dl) []]
---           [d| name alpha f = xi dl |]
+genAbstractions :: String -> Int -> Q [Dec]
+genAbstractions basis n = forM [1..n] (mkAbs basis)
