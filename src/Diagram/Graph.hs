@@ -1,19 +1,12 @@
 {-# LANGUAGE GeneralisedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE KindSignatures #-}
 
 module Diagram.Graph where
 
 import Control.Monad.State
-import Control.Arrow
-import Diagram.Template
-
--- | 
-data NodeType
-    = Red   Double
-    | Green Double
-    | Box
-    | Blank
-    deriving (Eq, Show)
+import Diagram.Template ( genAbstractions )
+import qualified Data.Sized as S
 
 data Basis
     = Z
@@ -26,50 +19,72 @@ data Node = Node
     { basis :: Basis
     , arg   :: Double
     , arity :: Int
-    , out   :: [Node]
-    , id    :: Int
+    , out   :: [] Node
+    , tag   :: Int
     } deriving (Eq, Show)
 
 newtype Graph a = Gr { unGr :: State Int a }
     deriving (Functor, Applicative, Monad, MonadState Int)
 
+runGraph :: Graph c -> c
+runGraph = flip evalState 0 . unGr
+
 node :: Basis -> Double -> Int -> [Node] -> Graph Node
 node b a n o = do
-    i <- get
-    put (i + 1)
-    return $ Node b a n o i
+    t <- get
+    put (t + 1)
+    return $ Node b a n o t
 
 abstraction :: Basis -> Double -> ([Node] -> [Node]) -> [Node] -> Graph Node
 abstraction basis alpha = liftM2 (node basis alpha) length
 
-zeta :: Double -> ([Node] -> [Node]) -> [Node] -> Graph Node
-zeta = abstraction Z
-
-xi :: Double -> ([Node] -> [Node]) -> [Node] -> Graph Node
-xi = abstraction X
+zeta, xi, heta, womega :: Double -> ([Node] -> [Node]) -> [Node] -> Graph Node
+zeta   = abstraction Z
+xi     = abstraction X
+heta   = abstraction H
+womega = abstraction W
 
 $(genAbstractions "xi" 5)
 $(genAbstractions "zeta" 5)
+$(genAbstractions "heta" 5)
+$(genAbstractions "womega" 5)
+
+eigenX :: Double -> Int -> Graph Node
+eigenX alpha n = xi1 alpha (replicate n)
+             =<< node X 0 1 [] 
+
+eigenZ :: Double -> Int -> Graph Node
+eigenZ alpha n = zeta1 alpha (replicate n)
+             =<< node Z 0 1 [] 
 
 had :: Node -> Graph Node
-had n = node H 0 1 [n]
+had = heta1 0 pure
 
 splits :: Node -> Graph Node
-splits n = node H 0 1 [n,n]
+splits = heta1 0 (\x -> [x,x])
+
+splitn :: Int -> Node -> Graph Node
+splitn = heta1 0 . replicate
+
+mergen :: [Node] -> Graph Node
+mergen = heta 0 (pure . head)
 
 pauliX :: Node -> Graph Node
-pauliX n = node X pi 1 [n]
+pauliX = xi1 pi pure
+
+xNode :: Double -> [Node] -> Graph Node
+xNode = flip xi id
 
 isometry :: Double -> Node -> Graph Node
-isometry phase x = node X phase 1 [x,x]
+isometry = flip xi1 (\x -> [x,x]) 
 
 share :: Node -> Graph Node
 share = isometry 0
 
-partIsometry :: Double -> Node -> Graph Node
-partIsometry phase x = node X phase 2 [x]
+partIsometry :: Double -> Node -> Node -> Graph Node
+partIsometry = flip xi2 (\x _ -> [x])
 
-fuse :: Node -> Graph Node
+fuse :: Node -> Node -> Graph Node
 fuse = partIsometry 0
 
 -- ghz :: Graph Node

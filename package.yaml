@@ -25,6 +25,7 @@ dependencies:
 - containers
 - mtl
 - template-haskell
+- sized
 
 library:
   source-dirs: src

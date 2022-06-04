@@ -27,8 +27,6 @@ delist n = do
         expr = foldl1 AppE (map VarE (f:xs))
     return $ LamE [args] expr
 
--- xii3 alpha f n1 n2 n3 = xi alpha (\[x, y, z] -> f x y z) [n1, n2, n3]
-
 mkAbs:: String -> Int -> Q Dec
 mkAbs basis n = do
     args  <- replicateM n (newName "n")
