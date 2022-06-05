@@ -45,9 +45,9 @@ xi     = abstraction X
 heta   = abstraction H
 womega = abstraction W
 
-$(genAbstractions "xi" 5)
-$(genAbstractions "zeta" 5)
-$(genAbstractions "heta" 5)
+$(genAbstractions "zeta"   5)
+$(genAbstractions "xi"     5)
+$(genAbstractions "heta"   5)
 $(genAbstractions "womega" 5)
 
 eigenX :: Double -> Int -> Graph Node
