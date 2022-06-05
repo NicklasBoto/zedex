@@ -16,8 +16,8 @@ data Basis
     deriving (Eq, Show)
 
 data Node = Node
-    { basis :: Basis
-    , arg   :: Double
+    { basis :: Maybe Basis
+    , arg   :: Maybe Double
     , arity :: Int
     , out   :: [] Node
     , tag   :: Int
@@ -33,7 +33,8 @@ node :: Basis -> Double -> Int -> [Node] -> Graph Node
 node b a n o = do
     t <- get
     put (t + 1)
-    return $ Node b a n o t
+    return $ Node (Just b) (Just a) n o t
+{-# INLINE node #-}
 
 abstraction :: Basis -> Double -> ([Node] -> [Node]) -> [Node] -> Graph Node
 abstraction basis alpha = liftM2 (node basis alpha) length
