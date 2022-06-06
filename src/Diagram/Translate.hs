@@ -1,3 +1,5 @@
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Diagram.Translate
     (
@@ -5,6 +7,7 @@ module Diagram.Translate
     ) where
 
 import Diagram.Graph
+import Data.Traversable (for)
 
 -- data Node = Node
 --     { basis :: Maybe Basis
@@ -14,17 +17,44 @@ import Diagram.Graph
 --     , tag   :: Int
 --     } deriving (Eq, Show)
 
-translate :: Node -> String
-translate = undefined
+translate :: [Node] -> String
+translate ns = unlines
+  [ boilerplate
+  , concat $ zipWith creepNode [0..] ns
+  ]
+
+creepNode :: Int -> Node -> String
+creepNode q n@Node{..} = unlines
+  [ concatMap (creepNode q) out
+  , vertex q n
+  , concatMap (edge n) out
+  ]
+
 
 -- v = g.add_vertex(zx.VertexType.Z, qubit=0, row=1, phase=1)
 -- g.add_edge(g.edge(v,w),edgetype=zx.EdgeType.SIMPLE)
 
-vertex :: Node -> String
-vertex (Node b a ar o t) = unwords
-  [ 'v' : show t -- specify variable name by tag
-  , "= g.add_vertex(zx.VertexType." ++ show b
-  , ""
+edge :: Node -> Node -> String
+edge Node{tag=v} Node{tag=w} = concat
+  [ "g.add_edge(g.edge(v", show v, ", v", show w, ")"
+  , ", edgetype=zx.EdgeType.SIMPLE)"
+  ] 
+
+vertex :: Int -> Node -> String
+vertex q Node{tag, basis=Just basis, arg=Just arg} = concat
+  [ 'v' : show tag -- specify variable name by tag
+  , " = g.add_vertex(zx.VertexType." ++ show basis
+  , ", qubit=" ++ show q
+  , ", row=" ++ show tag
+  , ", phase=" ++ show arg
+  , ")"
+  ]
+vertex q Node{tag} = concat
+  [ 'v' : show tag -- specify variable name by tag
+  , " = g.add_vertex(zx.VertexType.BOUNDARY"
+  , ", qubit=" ++ show q
+  , ", row=" ++ show tag
+  , ")"
   ]
 
 boilerplate :: String
