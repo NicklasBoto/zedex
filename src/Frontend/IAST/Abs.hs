@@ -1,5 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
 module Frontend.IAST.Abs where
 
 import Data.Complex (Complex)
@@ -10,17 +8,14 @@ data Id = Id
     }
   deriving (Eq, Show, Read)
   
-data Program = Progr [Toplevel]
+newtype Program = Progr [Toplevel]
   deriving (Eq, Show, Read) 
 
 data Basis
     = Z
     | X
-    | H
-    | W
     | None
-  deriving (Eq, Show, Read)
-  
+  deriving (Eq, Show, Read) 
 data Toplevel
     = ToplF Id [Id] Expr
     | Topl Basis (Complex Double) [Id] Expr
