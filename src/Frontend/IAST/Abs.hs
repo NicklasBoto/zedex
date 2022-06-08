@@ -1,4 +1,10 @@
-module Frontend.IAST.Abs where
+module Frontend.IAST.Abs 
+  ( Id (..)
+  , Program (..)
+  , Basis (..)
+  , Toplevel (..)
+  , Expr (..)
+  ) where
 
 import Data.Complex (Complex)
 
@@ -8,14 +14,14 @@ data Id = Id
     }
   deriving (Eq, Show, Read)
   
-newtype Program = Progr [Toplevel]
-  deriving (Eq, Show, Read) 
+type Program = [Toplevel]
 
 data Basis
     = Z
     | X
     | None
-  deriving (Eq, Show, Read) 
+  deriving (Eq, Show, Read)
+ 
 data Toplevel
     = ToplF Id [Id] Expr
     | Topl Basis (Complex Double) [Id] Expr
@@ -23,7 +29,7 @@ data Toplevel
   
 data Expr
     = Var Id
-    | Tup Expr [Expr]
+    | Tup [Expr]
     | Unit
     | App Expr Expr
     | Comp Expr Expr
