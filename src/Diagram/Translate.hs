@@ -8,6 +8,7 @@ module Diagram.Translate
 
 import Diagram.Graph
 import Data.Traversable (for)
+import Control.Monad
 
 -- data Node = Node
 --     { basis :: Maybe Basis
@@ -17,6 +18,32 @@ import Data.Traversable (for)
 --     , tag   :: Int
 --     } deriving (Eq, Show)
 
+inputs :: Int -> Int -> Int -> Node
+inputs arity tag qnum = undefined
+
+tnode = Node
+  { basis = Just Z
+  , arg   = Just 1
+  , arity = 1
+  , out   = pure $ Node
+    { basis = Just X
+    , arg   = Just 1
+    , arity = 1
+    , out   = [i 2, i 3]
+    , tag   = 1
+    }
+  , tag = 0
+  } where i = Node Nothing Nothing 1 []
+
+setup :: Graph [Node] -> Graph String
+setup g_ns = do
+  ns <- g_ns
+  let a_ns   = map arity ns
+      anchor = flip replicateM wire
+  ws <- mapM anchor a_ns
+  let tross = undefined
+  undefined
+
 translate :: [Node] -> String
 translate ns = unlines
   [ boilerplate
@@ -25,11 +52,10 @@ translate ns = unlines
 
 creepNode :: Int -> Node -> String
 creepNode q n@Node{..} = unlines
-  [ concatMap (creepNode q) out
+  [ concat $ zipWith creepNode [q..] out 
   , vertex q n
   , concatMap (edge n) out
   ]
-
 
 -- v = g.add_vertex(zx.VertexType.Z, qubit=0, row=1, phase=1)
 -- g.add_edge(g.edge(v,w),edgetype=zx.EdgeType.SIMPLE)
@@ -37,7 +63,7 @@ creepNode q n@Node{..} = unlines
 edge :: Node -> Node -> String
 edge Node{tag=v} Node{tag=w} = concat
   [ "g.add_edge(g.edge(v", show v, ", v", show w, ")"
-  , ", edgetype=zx.EdgeType.SIMPLE)"
+  , ", edgetype=zx.EdgeType.SIMPLE)\n"
   ] 
 
 vertex :: Int -> Node -> String
@@ -63,3 +89,5 @@ boilerplate = unlines
   , "import pyzx as zx"
   , "g = zx.Graph()"
   ]
+
+test = putStrLn . translate . pure . runGraph
