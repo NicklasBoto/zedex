@@ -1,85 +1,121 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TupleSections #-}
 
 module Diagram.Translate
     (
 
     ) where
 
-import Diagram.Graph
+import Diagram.Graph hiding ( Node(..) )
+import qualified Diagram.Graph as G ( Node(..) )
 import Data.Traversable (for)
 import Control.Monad
+import Data.Numbers.Primes
 
--- data Node = Node
---     { basis :: Maybe Basis
---     , arg   :: Maybe Double
---     , arity :: Int
---     , out   :: [] Node
---     , tag   :: Int
---     } deriving (Eq, Show)
+data Node = Node
+    { bas :: Maybe Basis
+    , arg :: Maybe Double
+    , ary :: Int
+    , out :: [] Node
+    , tag :: Int
+    , row :: Int
+    , col :: Int
+    } deriving (Eq, Show)
 
 inputs :: Int -> Int -> Int -> Node
 inputs arity tag qnum = undefined
 
-tnode = Node
-  { basis = Just Z
-  , arg   = Just 1
-  , arity = 1
-  , out   = pure $ Node
-    { basis = Just X
-    , arg   = Just 1
-    , arity = 1
-    , out   = [i 2, i 3]
-    , tag   = 1
+tnode = G.Node
+  { G.basis = Just Z
+  , G.arg   = Just pi_rad
+  , G.arity = 1
+  , G.out   = pure $ G.Node
+    { G.basis = Just X
+    , G.arg   = Just pi_rad
+    , G.arity = 1
+    , G.out   = [i 2, i 1]
+    , G.tag   = 1
     }
   , tag = 0
-  } where i = Node Nothing Nothing 1 []
+  } where i = G.Node Nothing Nothing 1 []
+          pi_rad = 1 -- alpha = pi * arg
 
-setup :: Graph [Node] -> Graph String
+setup :: Graph [G.Node] -> Graph String
 setup g_ns = do
   ns <- g_ns
-  let a_ns   = map arity ns
+  let a_ns   = map G.arity ns
       anchor = flip replicateM wire
   ws <- mapM anchor a_ns
-  let tross = undefined
-  undefined
+  let tross n = \case
+        w:ws -> w { G.out = [n] } : tross n ws
+        []   -> []
+      ns' = concat (zipWith tross ns ws)
+      label r c m@G.Node{..} e = (e', Node
+        { bas = G.basis m
+        , arg = G.arg   m
+        , ary = G.arity m
+        , out = [ snd (label (r+1) c_n o_n e')
+                | o_n <- G.out m, c_n <- [c..]
+                ]
+        , tag = G.tag m
+        , row = r
+        , col = c
+        }) where ovf = length (G.out m) - 1
+                 e'  = if ovf > e then ovf else e
+      riple c = \case
+        []   -> []
+        m:ms -> let (e, k_l) = label 0 c m 0
+                  in k_l : riple (c+e) ms
+      -- ns'' = zipWith (\c m -> snd (label 0 c m 0)) [0..] ns'
+      ns'' = riple 0 ns'
+      code = translate ns''
+  return code
 
 translate :: [Node] -> String
 translate ns = unlines
   [ boilerplate
-  , concat $ zipWith creepNode [0..] ns
+  , concatMap creepNode ns
   ]
 
-creepNode :: Int -> Node -> String
-creepNode q n@Node{..} = unlines
-  [ concat $ zipWith creepNode [q..] out 
-  , vertex q n
+creepNode :: Node -> String
+creepNode n@Node{..} = unlines
+  [ concatMap creepNode out
+  , vertex n
   , concatMap (edge n) out
   ]
 
+-- riple c = \case
+--   []   -> []
+--   m:ms -> let (e, k_l) = label 0 c m 0
+--             in k_l : riple (c+e) ms
 -- v = g.add_vertex(zx.VertexType.Z, qubit=0, row=1, phase=1)
 -- g.add_edge(g.edge(v,w),edgetype=zx.EdgeType.SIMPLE)
 
-edge :: Node -> Node -> String
-edge Node{tag=v} Node{tag=w} = concat
-  [ "g.add_edge(g.edge(v", show v, ", v", show w, ")"
-  , ", edgetype=zx.EdgeType.SIMPLE)\n"
-  ] 
+name :: Node -> String
+name Node{row,col,tag} = 'v' : show (product (map (primes!!) [row,col,tag]))
 
-vertex :: Int -> Node -> String
-vertex q Node{tag, basis=Just basis, arg=Just arg} = concat
-  [ 'v' : show tag -- specify variable name by tag
+edge :: Node -> Node -> String
+edge n m = concat
+  [ "g.add_edge(g.edge(", name n, ",", name m, ")"
+  , ", edgetype=zx.EdgeType.SIMPLE)\n"
+  ]
+
+vertex :: Node -> String
+vertex n@Node{bas=Just basis, arg=Just arg, row, col} = concat
+  [ name n
   , " = g.add_vertex(zx.VertexType." ++ show basis
-  , ", qubit=" ++ show q
-  , ", row=" ++ show tag
+  , ", qubit=" ++ show row
+  , ", row=" ++ show col
   , ", phase=" ++ show arg
   , ")"
   ]
-vertex q Node{tag} = concat
-  [ 'v' : show tag -- specify variable name by tag
+vertex n@Node{tag, row, col} = concat
+  [ name n
   , " = g.add_vertex(zx.VertexType.BOUNDARY"
-  , ", qubit=" ++ show q
-  , ", row=" ++ show tag
+  , ", qubit=" ++ show row
+  , ", row=" ++ show col
   , ")"
   ]
 
@@ -90,4 +126,4 @@ boilerplate = unlines
   , "g = zx.Graph()"
   ]
 
-test = putStrLn . translate . pure . runGraph
+test = putStrLn . runGraph . setup . sequence . pure

@@ -45,7 +45,7 @@ library
     , base >=4.7 && <5
     , containers
     , mtl
-    , sized
+    , primes
     , template-haskell
   default-language: Haskell2010
 
@@ -61,7 +61,7 @@ executable zedex-exe
     , base >=4.7 && <5
     , containers
     , mtl
-    , sized
+    , primes
     , template-haskell
     , zedex
   default-language: Haskell2010
@@ -79,7 +79,7 @@ test-suite zedex-test
     , base >=4.7 && <5
     , containers
     , mtl
-    , sized
+    , primes
     , template-haskell
     , zedex
   default-language: Haskell2010
