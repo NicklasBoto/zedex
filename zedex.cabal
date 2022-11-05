@@ -13,7 +13,6 @@ author:         Nicklas Botö
 maintainer:     git@nicbot.xyz
 copyright:      GPL-3
 license:        BSD3
-license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
@@ -25,6 +24,7 @@ source-repository head
 
 library
   exposed-modules:
+      Diagram.Graph
       Frontend.Zedex.Abs
       Frontend.Zedex.ErrM
       Frontend.Zedex.Layout
@@ -39,8 +39,12 @@ library
   hs-source-dirs:
       src
   build-depends:
-      base >=4.7 && <5
-    , haskell-graphite
+      array
+    , base >=4.7 && <5
+    , containers
+    , mtl
+    , primes
+    , template-haskell
   default-language: Haskell2010
 
 executable zedex-exe
@@ -51,8 +55,12 @@ executable zedex-exe
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
-    , haskell-graphite
+      array
+    , base >=4.7 && <5
+    , containers
+    , mtl
+    , primes
+    , template-haskell
     , zedex
   default-language: Haskell2010
 
@@ -65,7 +73,11 @@ test-suite zedex-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
-    , haskell-graphite
+      array
+    , base >=4.7 && <5
+    , containers
+    , mtl
+    , primes
+    , template-haskell
     , zedex
   default-language: Haskell2010

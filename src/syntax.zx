@@ -94,4 +94,72 @@ f := do
 --     scatter e1 e2
 --     return (e1,e2)
 
- 
+
+-- Lol
+
+{-
+
+-}
+
+data Bool := F | T
+
+
+
+gib : a -> (a,a,a,a)
+  x := (x,x,x,x) 
+
+entangle : a -> (a,a)
+  x := (x,x)
+
+const (x,y) := x
+
+f x := const (entangle x)
+
+and : Bool -> Bool -> Bool
+  | T, T => T
+  | _    => F
+
+Result a := None | Ok a
+
+getResult : Monoid m |- Result m -> m
+  | Ok a => a
+  | None => mempty
+
+typeclass Print a implements
+  string : a -> String
+
+prove Print Bool with
+  string | T => "T"
+         | F => "F"
+
+Bool := F | T
+Unit := @(Pi), Unit
+
+Z(),
+mZ : a -> Unit
+ _ := Unit
+
+m@ : a -> Unit
+ _ := Unit
+
+H(),
+mH : a -> Unit
+ _ := Unit
+
+X(Pi) f x := (mZ x, x, mH [x,x])
+
+
+T1 := T1_0 
+T2 := T2_0 | T2_1
+T3 := T3_0 | T3_1 | T3_2
+-- ...
+
+Succ n := Succ_bot | Succ n 
+Pred n := Pred_bot | Pred n 
+
+ladder_a : Succ a ~ b |- a -> b
+  := concat_map (W x=>[x,x])  
+
+ladder_d : Pred a ~ b |- a -> b
+  := map (W [x,x]=>x) @ groups_of 2
+
