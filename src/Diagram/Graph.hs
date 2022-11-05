@@ -1,83 +1,52 @@
-{-# LANGUAGE GeneralisedNewtypeDeriving #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE BlockArguments #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE KindSignatures     #-}
+{-# LANGUAGE TypeOperators      #-}
+{-# LANGUAGE DataKinds          #-}
+{-# LANGUAGE GADTs              #-}
 
-module Diagram.Graph where
+module Diagram.Graph
+    ( Graph(..)
+    ) where
 
-import Control.Monad.State
-import Diagram.Template ( genAbstractions )
+import GHC.TypeLits ( Nat, type (+), KnownNat )
 
-data Basis
-  = Z
-  | X
-  | H
-  | W
-  deriving (Eq, Show)
+-- | Intermediate phase translation
+data Phase = None | Pi2 | Pi4 | Pi
+    deriving (Eq, Show)
 
-data Node = Node
-  { basis :: Maybe Basis
-  , arg   :: Maybe Double
-  , arity :: Int
-  , out   :: [] Node
-  , tag   :: Int
-  } deriving (Eq, Show)
+-- | ZX-diagram graph reprsentation
+data Graph :: Nat -> Nat -> * where
+    Empty   -- * the empty diagram
+        :: Graph 0 0
 
-newtype Graph a = Gr { unGr :: State Int a }
-    deriving (Functor, Applicative, Monad, MonadState Int)
+    Cup     -- * covariant time reversal
+        :: Graph 0 2
 
-runGraph :: Graph c -> c
-runGraph = flip evalState 0 . unGr
+    Cap     -- * contravariant time reversal
+        :: Graph 2 0
 
-node :: Basis -> Double -> Int -> [Node] -> Graph Node
-node b a n o = do
-  t <- get
-  put (t + 1)
-  return $ Node (Just b) (Just a) n o t
-{-# INLINE node #-}
+    Wire    -- * identity wire
+        :: Graph 1 1
 
-abstraction :: Basis -> Double -> ([Node] -> [Node]) -> [Node] -> Graph Node
-abstraction basis alpha = liftM2 (node basis alpha) length
+    H       -- * hadamard box
+        :: Graph 1 1
 
-zeta, xi, heta, womega :: Double -> ([Node] -> [Node]) -> [Node] -> Graph Node
-zeta   = abstraction Z
-xi     = abstraction X
-heta   = abstraction H
-womega = abstraction W
+    Z       -- * z spider
+        :: Phase -> Graph i o
 
-$(genAbstractions "zeta"   5)
-$(genAbstractions "xi"     5)
-$(genAbstractions "heta"   5)
-$(genAbstractions "womega" 5)
+    X       -- * x spider
+        :: Phase -> Graph i o
 
-wire :: Graph Node
-wire = do
-  t <- get
-  put (t + 1)
-  return $ Node Nothing Nothing 1 [] t
+    Dag     -- * dagger
+        :: Graph i o -> Graph o i
 
-eigenGenerator :: Basis -> Double -> Int -> Graph Node
-eigenGenerator basis alpha n = node basis alpha 0 =<< replicateM n wire
+    CJI     -- * Choi-Jamiolkowski isomporphism
+        :: Graph i o -> Graph 0 (i+o)
 
-eigenZ, eigenX, eigenH, eigenW  :: Double -> Int -> Graph Node
-eigenZ = eigenGenerator Z
-eigenX = eigenGenerator X
-eigenH = eigenGenerator H
-eigenW = eigenGenerator W
+    IJC     -- * reverse CJI
+        :: Graph 0 (i+o) -> Graph i o
 
-new :: Int -> Graph Node
-new n = eigenZ (pi * fromIntegral n) 1
+    Par     -- * parallel composition
+        :: Graph i1 o1 -> Graph i2 o2 -> Graph (i1+i2) (o1+o2)
 
-splitn :: Int -> Node -> Graph Node
-splitn = heta1 0 . replicate
-
-mergen :: [Node] -> Graph Node
-mergen = heta 0 \case
-  []  -> []
-  n:_ -> [n]
-
-pauliX :: Node -> Graph Node
-pauliX = xi1 pi pure
-
-had :: Node -> Graph Node
-had = heta1 0 pure
+    Ser     -- * serial composition
+        :: (o1~i2) => Graph i1 o1 -> Graph i2 o2 -> Graph i1 o2

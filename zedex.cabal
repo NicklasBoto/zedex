@@ -25,8 +25,6 @@ source-repository head
 library
   exposed-modules:
       Diagram.Graph
-      Diagram.Template
-      Diagram.Translate
       Frontend.Zedex.Abs
       Frontend.Zedex.ErrM
       Frontend.Zedex.Layout
