@@ -1,7 +1,7 @@
-{-# LANGUAGE KindSignatures     #-}
-{-# LANGUAGE TypeOperators      #-}
-{-# LANGUAGE DataKinds          #-}
-{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE TypeOperators  #-}
+{-# LANGUAGE DataKinds      #-}
+{-# LANGUAGE GADTs          #-}
 
 module Diagram.Graph
     ( Graph(..)
