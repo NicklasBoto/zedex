@@ -3,60 +3,86 @@ layout toplevel ;
 Progr. Program ::= [Toplevel] ;
 terminator Toplevel ";" ;
 
-ToplF  . Toplevel ::= Id [Id] ":=" Expr ;
-ToplX  . Toplevel ::= "ξ" "(" Complex ")" [Id] ":=" Expr ;
-toplxs . Toplevel ::= "X" "(" Complex ")" [Id] ":=" Expr ;
-ToplZ  . Toplevel ::= "ζ" "(" Complex ")" [Id] ":=" Expr ;
-toplzs . Toplevel ::= "Z" "(" Complex ")" [Id] ":=" Expr ;
-
-define toplxs c x m = ToplX c x m ;
-define toplzs c x m = ToplZ c x m ;
+ToplF  . Toplevel ::= Id "=>" Type [Var] ":=" Expr ;
+ToplB  . Toplevel ::= Basis Id "=>" Type [Var] ":=" Expr ;
+separator Var "," ;
 
 position token Id letter (letter | digit | '_' | '\'')* ;
 
+TI . TypedId ::= Id ":" Type ; 
+ti . TypedId ::= Id ;
+
+define ti id = TI id TBot ;
+
+VVar . Var ::= TypedId ;
+VDag . Var ::= "~" Var ;
+VUnd . Var ::= "_" TypedId ;
+VBas . Var ::= Basis TypedId ;
+
+HX  . Basis ::= "ξ" "(" Real ")" ;
+hxs . Basis ::= "X" "(" Real ")" ;
+HZ  . Basis ::= "ζ" "(" Real ")" ;
+hzs . Basis ::= "Z" "(" Real ")" ;
+hxz . Basis ::= "ξ" ;
+hXz . Basis ::= "X" ;
+hzz . Basis ::= "ζ" ;
+hZz . Basis ::= "Z" ;
+HH  . Basis ::= "η" ;
+hH  . Basis ::= "H" ;
+
+define hxs r = HX r ;
+define hzs r = HZ r ;
+define hxz   = HX (RReal 0) ;
+define hXz   = HX (RReal 0) ;
+define hzz   = HZ (RReal 0) ;
+define hZz   = HZ (RReal 0) ;
+define hH    = HH ;
+
 EVar   . Expr3 ::= Id ;
+EUndef . Expr3 ::= "?" ;
 ETup   . Expr3 ::= "(" Expr "," [Expr] ")" ;
 EUnit  . Expr3 ::= "(" ")" ;
+EHad   . Expr3 ::= "~" Expr3 ;
+EGen   . Expr3 ::= Basis "[" Integer "]" ;
+EUnf   . Expr3 ::= Basis "!" ;
 EApp   . Expr2 ::= Expr2 Expr3 ;
 edolr  . Expr1 ::= Expr2 "$" Expr1 ;
 EComp  . Expr1 ::= Expr2 "∘" Expr1 ;
-ecomps . Expr1 ::= Expr2 "@" Expr1 ;
-EHad   . Expr1 ::= "~" Expr1 ;
-EAbs   . Expr1 ::= "λ" [Id] "." Expr ;
-eabss  . Expr1 ::= "\\" [Id] "." Expr ;
-EXAbs  . Expr1 ::= "ξ" "(" Complex ")" [Id] "." Expr ;
-exabss . Expr1 ::= "X" "(" Complex ")" [Id] "." Expr ;
-EZAbs  . Expr1 ::= "ζ" "(" Complex ")" [Id] "." Expr ;
-ezabss . Expr1 ::= "Z" "(" Complex ")" [Id] "." Expr ;
+ecomps . Expr1 ::= Expr2 "." Expr1 ;
+EAbs   . Expr1 ::= "λ" [TypedId] "=>" Expr ;
+eabss  . Expr1 ::= "\\" [TypedId] "=>" Expr ;
+EBAbs  . Expr1 ::= Basis [TypedId] "=>" Expr ;
 coercions Expr 3 ;
 separator nonempty Expr "," ;
-separator nonempty Id "" ;
+separator nonempty TypedId "" ;
 
-define edolr a b    = EApp a b ;
-define ecomps a b   = EComp a b ;
-define eabss x m    = EAbs x m ;
-define exabss c x m = EXAbs c x m ;
-define ezabss c x m = EZAbs c x m ;
+define edolr a b  = EApp a b ;
+define ecomps a b = EComp a b ;
+define eabss x m  = EAbs x m ;
 
-CComp . Complex2 ::= Scalar "+" Scalar "i" ;
-CComn . Complex2 ::= Scalar "-" Scalar "i" ;
-creal . Complex2 ::= Scalar ;
-cnmag . Complex2 ::= "-i" ;
-cjmag . Complex2 ::= "i" ;
-CPi   . Complex2 ::= "π" ;
-cpis  . Complex2 ::= "pi" ;
-CE    . Complex2 ::= "e" ;
-CExp  . Complex1 ::= Complex2 "^" Complex1 ;
-CDiv  . Complex1 ::= Complex2 "/" Complex1 ;
-CMul  . Complex1 ::= Complex2 Complex1 ;
-coercions Complex 2 ;
+RReal . Real2 ::= Integer ;
+RPi   . Real2 ::= "π" ;
+rpis  . Real2 ::= "pi" ;
+RE    . Real2 ::= "e" ;
+RExp  . Real1 ::= Real2 "^" Real1 ;
+RDiv  . Real1 ::= Real2 "/" Real1 ;
+RAdd  . Real1 ::= Real2 "+" Real1 ;
+RMul  . Real1 ::= Real2 Real1 ;
+coercions Real 2 ;
 
-define creal r = CComp r (Scalar "0") ;
-define cnmag   = CComp (Scalar "0") (Scalar "-1") ;
-define cjmag   = CComp (Scalar "0") (Scalar "1") ;
-define cpis    = CPi ;
+define rpis = RPi ;
 
-token Scalar '-'? digit+ ('.' digit+ ('E' '-'? digit+)?)? ;
+TInt . Type2 ::= Integer ;
+TBot . Type2 ::= "⊥" ;
+tbot . Type2 ::= "Bot" ;
+TTup . Type2 ::= "(" Type "," [Type] ")";
+TDag . Type2 ::= Type2 "*" ;
+tarr . Type1 ::= Type2 "->" Type1 ;
+coercions Type 2 ;
+separator nonempty Type "," ;
+
+define tarr n p = TTup (TDag n) [p] ;
+define tbot     = TBot ;
 
 comment "--" ;
 comment "{-" "-}" ;

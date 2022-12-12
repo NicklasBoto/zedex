@@ -34,6 +34,8 @@ library
       Frontend.Zedex.Skel
       Frontend.Zedex.Test
       Lib
+      Typecheck.Check
+      Typecheck.Error
   other-modules:
       Paths_zedex
   hs-source-dirs:
